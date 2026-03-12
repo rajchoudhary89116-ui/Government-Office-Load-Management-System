@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Divyansh%20Arya/OneDrive/Documents/Government%20Website/smart-gov-app/src/app/page.jsx"],"sourcesContent":["\"use client\"\n\nimport { useEffect } from 'react'\nimport { useRouter } from 'next/navigation'\nimport { useAuth } from '@/context/AuthContext'\nimport Dashboard from '@/views/Dashboard'\n\nexport default function Page() {\n  const { user, loading } = useAuth()\n  const router = useRouter()\n\n  useEffect(() => {\n    if (!loading && !user) {\n      router.push('/login')\n    }\n  }, [user, loading, router])\n\n  if (loading || !user) return null\n\n  return <Dashboard />\n}\n"],"names":[],"mappings":";;;;;AAEA;AACA;;;;;;;;;;;AAHA;;;;;;AAOe,SAAS;IACtB,MAAM,EAAE,IAAI,EAAE,OAAO,EAAE,GAAG;IAC1B,MAAM,SAAS,IAAA,+IAAS;IAExB,IAAA,kNAAS,EAAC;QACR,IAAI,CAAC,WAAW,CAAC,MAAM;YACrB,OAAO,IAAI,CAAC;QACd;IACF,GAAG;QAAC;QAAM;QAAS;KAAO;IAE1B,IAAI,WAAW,CAAC,MAAM,OAAO;IAE7B,qBAAO,8OAAC;;;;;AACV"}}]
+}

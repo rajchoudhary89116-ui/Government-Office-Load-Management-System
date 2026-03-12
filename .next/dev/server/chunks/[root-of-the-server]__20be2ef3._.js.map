@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 46, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Divyansh%20Arya/OneDrive/Documents/Government%20Website/smart-gov-app/src/app/api/auth/me/route.js"],"sourcesContent":["import { NextResponse } from 'next/server'\nimport { verifyToken } from '@/lib/auth'\n\nexport async function GET(request) {\n  const token = request.cookies.get('smartgov_session')?.value\n\n  if (!token) {\n    return NextResponse.json({ user: null }, { status: 401 })\n  }\n\n  const payload = await verifyToken(token)\n\n  if (!payload) {\n    return NextResponse.json({ user: null }, { status: 401 })\n  }\n\n  return NextResponse.json({ user: payload }, { status: 200 })\n}\n"],"names":[],"mappings":";;;;AAAA;;;;;;;;AAGO,eAAe,IAAI,OAAO;IAC/B,MAAM,QAAQ,QAAQ,OAAO,CAAC,GAAG,CAAC,qBAAqB;IAEvD,IAAI,CAAC,OAAO;QACV,OAAO,gJAAY,CAAC,IAAI,CAAC;YAAE,MAAM;QAAK,GAAG;YAAE,QAAQ;QAAI;IACzD;IAEA,MAAM,UAAU,MAAM,YAAY;IAElC,IAAI,CAAC,SAAS;QACZ,OAAO,gJAAY,CAAC,IAAI,CAAC;YAAE,MAAM;QAAK,GAAG;YAAE,QAAQ;QAAI;IACzD;IAEA,OAAO,gJAAY,CAAC,IAAI,CAAC;QAAE,MAAM;IAAQ,GAAG;QAAE,QAAQ;IAAI;AAC5D"}}]
+}
