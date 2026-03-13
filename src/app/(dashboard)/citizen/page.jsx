@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Landmark, FileText, CreditCard, CheckCircle, Clock, ArrowRight, Hash, Shield, AlertTriangle, ChevronDown, ChevronUp, FileCheck, Copy } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Landmark, FileText, CreditCard, CheckCircle, Clock, ArrowRight, Hash, Shield, AlertTriangle, ChevronDown, ChevronUp, FileCheck, Copy, MessageSquare, Plus, Image as ImageIcon, Send, X, AlertCircle, Camera, ThumbsUp, ThumbsDown, Users } from 'lucide-react'
 
 function generateHash() {
   const chars = '0123456789abcdef'
@@ -91,6 +91,8 @@ const CERTIFICATE_DOCS = {
 
 export default function CitizenDashboard() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const view = searchParams.get('view')
   const [user, setUser] = useState(null)
   const [selectedService, setSelectedService] = useState(null)
   const [step, setStep] = useState('select')
@@ -98,6 +100,20 @@ export default function CitizenDashboard() {
   const [token, setToken] = useState('')
   const [transactions, setTransactions] = useState([])
   const [expandedCert, setExpandedCert] = useState(null)
+  const [grievances, setGrievances] = useState([])
+  const [grievanceText, setGrievanceText] = useState('')
+  const [grievanceImages, setGrievanceImages] = useState([])
+  const [isSubmittingGrievance, setIsSubmittingGrievance] = useState(false)
+  const [grievanceTab, setGrievanceTab] = useState('feed') // 'submit' or 'feed'
+  const [votedIds, setVotedIds] = useState({}) // track what the user has voted on
+
+  useEffect(() => {
+    if (view === 'grievance') {
+      setStep('grievance')
+    } else {
+      setStep('select')
+    }
+  }, [view])
 
   useEffect(() => {
     const stored = localStorage.getItem('smartgov-user')
@@ -114,6 +130,51 @@ export default function CitizenDashboard() {
     const savedTx = localStorage.getItem('smartgov-transactions')
     if (savedTx) {
       setTransactions(JSON.parse(savedTx))
+    }
+    const savedGr = localStorage.getItem('smartgov-grievances')
+    if (savedGr) {
+      setGrievances(JSON.parse(savedGr))
+    } else {
+      // Demo Data
+      const demoGrievances = [
+        {
+          id: 101,
+          text: "Pothole issue on the main market road. It's causing massive traffic jams during peak hours.",
+          images: ["https://images.unsplash.com/photo-1544980766-72b589c682ee?auto=format&fit=crop&q=80&w=400"],
+          status: 'In Progress',
+          date: '12/03/2026, 09:15:00',
+          user: 'Rahul Sharma',
+          likes: 24,
+          dislikes: 2
+        },
+        {
+          id: 102,
+          text: "Street lights are not working near the park entrance since last three days. It feels unsafe for evening walkers.",
+          images: [],
+          status: 'Submitted',
+          date: '12/03/2026, 11:30:00',
+          user: 'Anita Gupta',
+          likes: 15,
+          dislikes: 0
+        },
+        {
+          id: 103,
+          text: "Garbage collection truck hasn't arrived in Ward 4 for the past two days. Foul smell is spreading in the residential area.",
+          images: ["https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&q=80&w=400"],
+          status: 'Submitted',
+          date: '13/03/2026, 08:45:00',
+          user: 'Manoj Singh',
+          likes: 38,
+          dislikes: 1
+        }
+      ]
+      setGrievances(demoGrievances)
+      localStorage.setItem('smartgov-grievances', JSON.stringify(demoGrievances))
+    }
+    
+    const savedVotes = localStorage.getItem('smartgov-votes')
+    if (savedVotes) {
+      setVotedIds(JSON.parse(savedVotes))
     }
   }, [router])
 
@@ -144,11 +205,72 @@ export default function CitizenDashboard() {
     }, 2500)
   }
 
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files)
+    files.forEach(file => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setGrievanceImages(prev => [...prev, reader.result])
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleGrievanceSubmit = () => {
+    if (!grievanceText.trim()) return
+    
+    setIsSubmittingGrievance(true)
+    setTimeout(() => {
+      const newGrievance = {
+        id: Date.now(),
+        text: grievanceText,
+        images: grievanceImages,
+        status: 'Submitted',
+        date: new Date().toLocaleString('en-IN'),
+        user: user?.name,
+        email: user?.email,
+        likes: 0,
+        dislikes: 0
+      }
+      
+      const updated = [newGrievance, ...grievances]
+      setGrievances(updated)
+      localStorage.setItem('smartgov-grievances', JSON.stringify(updated))
+      
+      setGrievanceText('')
+      setGrievanceImages([])
+      setStep('select')
+      setIsSubmittingGrievance(false)
+    }, 1500)
+  }
+
+  const handleVote = (id, type) => {
+    if (votedIds[id]) return
+
+    const updated = grievances.map(g => {
+      if (g.id === id) {
+        return {
+          ...g,
+          [type === 'like' ? 'likes' : 'dislikes']: g[type === 'like' ? 'likes' : 'dislikes'] + 1
+        }
+      }
+      return g
+    })
+
+    const newVotes = { ...votedIds, [id]: type }
+    setGrievanceTab('feed')
+    setGrievances(updated)
+    setVotedIds(newVotes)
+    localStorage.setItem('smartgov-grievances', JSON.stringify(updated))
+    localStorage.setItem('smartgov-votes', JSON.stringify(newVotes))
+  }
+
   const resetFlow = () => {
     setSelectedService(null)
     setStep('select')
     setTxHash('')
     setToken('')
+    setGrievanceTab('feed')
   }
 
   if (!user) return null
@@ -192,6 +314,7 @@ export default function CitizenDashboard() {
               )
             })}
           </div>
+
 
           {/* Certificate Document Requirements */}
           <div className="glass-panel">
@@ -427,6 +550,217 @@ export default function CitizenDashboard() {
           <button className="btn btn-primary" onClick={resetFlow} style={{ width: '100%', gap: '0.5rem' }} id="new-transaction-btn">
             New Transaction <ArrowRight size={18} />
           </button>
+        </div>
+      )}
+
+      {/* Grievance Portal View */}
+      {step === 'grievance' && (
+        <div className="flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <button className="btn btn-outline" onClick={() => setStep('select')} style={{ gap: '0.5rem' }}>
+              <ArrowRight size={18} style={{ transform: 'rotate(180deg)', marginRight: '4px' }} /> Dashboard
+            </button>
+            <div className="flex gap-2 bg-silver-light" style={{ padding: '4px', borderRadius: 'var(--radius-md)', background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <button 
+                onClick={() => setGrievanceTab('feed')}
+                className={`btn ${grievanceTab === 'feed' ? 'btn-primary' : ''}`}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: grievanceTab === 'feed' ? undefined : 'transparent', color: grievanceTab === 'feed' ? undefined : 'var(--text-muted)' }}
+              >
+                Public Feed
+              </button>
+              <button 
+                onClick={() => setGrievanceTab('submit')}
+                className={`btn ${grievanceTab === 'submit' ? 'btn-primary' : ''}`}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: grievanceTab === 'submit' ? undefined : 'transparent', color: grievanceTab === 'submit' ? undefined : 'var(--text-muted)' }}
+              >
+                Submit & My History
+              </button>
+            </div>
+            <div className="badge badge-success" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Shield size={14} /> AI Priority Active
+            </div>
+          </div>
+
+          {grievanceTab === 'feed' ? (
+            <div className="flex-col gap-6">
+              <div className="glass-panel" style={{ padding: '1.5rem', background: 'linear-gradient(90deg, rgba(26, 58, 107, 0.05), transparent)' }}>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Users size={18} color="var(--primary)" /> Public Grievance Feed
+                </h3>
+                <p style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>Support issues in your community. Highly supported issues are prioritized by authorities.</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                {grievances.sort((a, b) => b.likes - a.likes).map(g => (
+                  <div key={g.id} className="glass-panel flex-col" style={{ padding: '1.25rem', gap: '1rem' }}>
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700 }}>
+                          {g.user?.charAt(0)}
+                        </div>
+                        <div>
+                          <p style={{ fontSize: '0.85rem', fontWeight: 700, margin: 0 }}>{g.user}</p>
+                          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>{g.date}</p>
+                        </div>
+                      </div>
+                      <span className={`badge badge-${g.status === 'In Progress' ? 'warning' : 'info'}`} style={{ fontSize: '0.65rem' }}>
+                        {g.status}
+                      </span>
+                    </div>
+
+                    <p style={{ fontSize: '0.9rem', lineHeight: 1.5, color: 'var(--text-main)', margin: 0 }}>{g.text}</p>
+
+                    {g.images && g.images.length > 0 && (
+                      <div className="flex gap-2" style={{ overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                        {g.images.map((img, i) => (
+                          <img key={i} src={img} alt="grievance" style={{ height: '120px', width: '100%', borderRadius: '8px', objectFit: 'cover', border: '1px solid var(--border)' }} />
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                      <div className="flex items-center gap-4">
+                        <button 
+                          onClick={() => handleVote(g.id, 'like')}
+                          disabled={votedIds[g.id]}
+                          className="flex items-center gap-2" 
+                          style={{ 
+                            background: votedIds[g.id] === 'like' ? 'rgba(46, 125, 91, 0.1)' : 'transparent',
+                            border: 'none', cursor: votedIds[g.id] ? 'default' : 'pointer',
+                            padding: '0.5rem', borderRadius: '6px', color: votedIds[g.id] === 'like' ? 'var(--success)' : 'var(--text-muted)',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          <ThumbsUp size={18} />
+                          <span style={{ fontWeight: 700 }}>{g.likes}</span>
+                        </button>
+                        <button 
+                          onClick={() => handleVote(g.id, 'dislike')}
+                          disabled={votedIds[g.id]}
+                          className="flex items-center gap-2" 
+                          style={{ 
+                            background: votedIds[g.id] === 'dislike' ? 'rgba(160, 50, 60, 0.1)' : 'transparent',
+                            border: 'none', cursor: votedIds[g.id] ? 'default' : 'pointer',
+                            padding: '0.5rem', borderRadius: '6px', color: votedIds[g.id] === 'dislike' ? 'var(--danger)' : 'var(--text-muted)',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          <ThumbsDown size={18} />
+                          <span style={{ fontWeight: 700 }}>{g.dislikes}</span>
+                        </button>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <AlertCircle size={14} /> Priority: {g.likes > 20 ? 'High' : 'Normal'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-6">
+              {/* New Grievance Form */}
+              <div className="glass-panel flex-col gap-4">
+                <div className="flex items-center gap-3" style={{ marginBottom: '0.5rem' }}>
+                  <Plus size={20} color="var(--primary)" />
+                  <h3 style={{ margin: 0 }}>Submit New Grievance</h3>
+                </div>
+                
+                <div className="input-group">
+                  <label className="input-label">Describe your query or concern</label>
+                  <textarea 
+                    className="input-field" 
+                    rows={5}
+                    placeholder="Tell us what's on your mind... e.g., Street light not working, Water supply issue, Delay in service"
+                    value={grievanceText}
+                    onChange={(e) => setGrievanceText(e.target.value)}
+                    style={{ resize: 'vertical', minHeight: '150px' }}
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label className="input-label">Attach Images (Optional)</label>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <label style={{
+                      width: '80px', height: '80px', borderRadius: '8px',
+                      border: '2px dashed var(--border)', display: 'flex',
+                      flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', color: 'var(--text-muted)', transition: 'all 0.3s ease'
+                    }} className="hover-scale">
+                      <Camera size={20} />
+                      <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Add</span>
+                      <input type="file" multiple accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                    </label>
+                    
+                    {grievanceImages.map((img, idx) => (
+                      <div key={idx} style={{ position: 'relative', width: '80px', height: '80px' }}>
+                        <img src={img} alt="upload preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                        <button 
+                          onClick={() => setGrievanceImages(prev => prev.filter((_, i) => i !== idx))}
+                          style={{
+                            position: 'absolute', top: '-6px', right: '-6px',
+                            width: '20px', height: '20px', borderRadius: '50%',
+                            background: 'var(--danger)', color: 'white', border: 'none',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button 
+                  className="btn btn-primary" 
+                  onClick={handleGrievanceSubmit}
+                  disabled={!grievanceText.trim() || isSubmittingGrievance}
+                  style={{ width: '100%', gap: '0.5rem', marginTop: '1rem' }}
+                >
+                  {isSubmittingGrievance ? 'Submitting...' : <><Send size={18} /> Submit Grievance</>}
+                </button>
+              </div>
+
+              {/* My Grievances History */}
+              <div className="glass-panel flex-col gap-4">
+                <div className="flex items-center gap-3" style={{ marginBottom: '0.5rem' }}>
+                  <Clock size={20} color="var(--primary)" />
+                  <h3 style={{ margin: 0 }}>My Recent Submissions</h3>
+                </div>
+                
+                <div className="flex-col gap-4" style={{ maxHeight: '600px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                  {grievances.filter(g => g.email === user?.email || g.user === user?.name).length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-muted)' }}>
+                      <MessageSquare size={48} style={{ opacity: 0.1, marginBottom: '1.5rem' }} />
+                      <p style={{ fontSize: '1.1rem', fontWeight: 500 }}>No grievances submitted by you yet.</p>
+                    </div>
+                  ) : (
+                    grievances.filter(g => g.email === user?.email || g.user === user?.name).map(g => (
+                      <div key={g.id} style={{
+                        padding: '1.25rem', borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border)', backgroundColor: 'var(--surface)'
+                      }}>
+                        <div className="flex justify-between items-start" style={{ marginBottom: '1rem' }}>
+                          <div>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{g.date}</p>
+                            <p style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 600 }}>ID: GR-{g.id.toString().slice(-6)}</p>
+                          </div>
+                          <span className={`badge badge-${g.status === 'Submitted' ? 'info' : 'success'}`} style={{ fontSize: '0.7rem' }}>
+                            {g.status}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>{g.text}</p>
+                        <div className="flex gap-2">
+                          <div className="badge badge-success" style={{ fontSize: '0.7rem' }}>👍 {g.likes} Supports</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

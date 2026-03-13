@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from 'react'
-import { Activity, LayoutDashboard, FileCheck, Ticket, CalendarClock, LogOut, Sun, Moon, Clock, Landmark, Receipt, Shield, BarChart3, Users, AlertTriangle, Settings } from 'lucide-react'
+import { Activity, LayoutDashboard, FileCheck, Ticket, CalendarClock, LogOut, Sun, Moon, Clock, Landmark, Receipt, Shield, BarChart3, Users, AlertTriangle, Settings, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
@@ -115,6 +115,7 @@ export default function Layout({ children }) {
     { id: 'dashboard', label: 'Office Load Monitor', icon: BarChart3, href: '/dashboard' },
     { id: 'transactions', label: 'Revenue & Transactions', icon: Receipt, href: '/transactions' },
     { id: 'token', label: 'Queue Management', icon: Ticket, href: '/token' },
+    { id: 'grievance', label: 'Grievance Hotline', icon: MessageSquare, href: '/admin?view=grievances' },
     { id: 'admin', label: 'Admin Panel', icon: Settings, href: '/admin' },
   ]
 
@@ -124,6 +125,7 @@ export default function Layout({ children }) {
     { id: 'document', label: 'AI Doc Verification', icon: FileCheck, href: '/document' },
     { id: 'officer', label: 'Book Appointment', icon: CalendarClock, href: '/officer' },
     { id: 'token', label: 'Smart Token System', icon: Ticket, href: '/token' },
+    { id: 'grievance', label: 'Grievance Portal', icon: MessageSquare, href: '/citizen?view=grievance' },
   ]
 
   const tabs = role === 'citizen' ? citizenTabs : employeeTabs
