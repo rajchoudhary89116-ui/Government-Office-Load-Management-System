@@ -1,2 +1,0 @@
-:HL["/_next/static/chunks/f8802f84ece4455e.css","style"]
-0:{"buildId":"PI5BK9b-hiRORIGTtNvsA","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"document","paramType":null,"paramKey":"document","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}

@@ -1,18 +1,20 @@
 import './globals.css'
-import Layout from '../components/Layout'
 
 export const metadata = {
-  title: 'SmartGov',
-  description: 'Smart Government Application',
+  title: 'SmartGov – Government Office Load Management',
+  description: 'Efficient Government Services with Smart Token & Blockchain-powered Transactions',
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+      </head>
       <body>
-        <Layout>
-          {children}
-        </Layout>
+        {children}
       </body>
     </html>
   )
